@@ -1,0 +1,295 @@
+#+TITLE: How not to Build Pyramids with Ice
+#+STARTUP: showall
+
+* Ice cube structures
+** Block of ice sitting on a table
+How far out can you put it?
+
+[[./images/block-0.svg]]
+** Depends on the center-of-gravity
+[[./images/block-1.svg]]
+** How about another identical ice block?
+[[./images/block-2x.svg]]
+** Need to move first block
+[[./images/block-2.svg]]
+** And a third?
+[[./images/block-3.svg]]
+** Harmonic series
+\begin{equation}
+x_n = \frac{1}{2} \sum\limits_{i=1}^n \frac{1}{i}
+\end{equation}
+** After 5 blocks
+[[./images/block-5.svg]]
+* Asynchronous Javascript
+** Single-threaded
+One thing at a time
+** Use callbacks
+So you can do other work instead of just waiting
+** It's hell
+#+BEGIN_SRC javascript
+  MongoClient.connect('mongodb://127.0.0.1:27017/test', function(err, db) {
+    if(err) throw err;
+    db.dropDatabase(function(err, done) {
+      db.createCollection('test_custom_key', function(err, collection) {
+        collection.insert({'a':1}, function(err, docs) {
+          collection.find({'_id':new ObjectID("aaaaaaaaaaaa")}).toArray(function(err, items) {
+            console.dir(items);
+            db.close();
+          });
+        });
+      });
+    });
+  });
+#+END_SRC
+[[https://github.com/mongodb/node-mongodb-native/blob/master/Readme.md][MongoDB Node driver README]]
+** Squint and look at it sideways
+[[./images/pyramid.jpg]]
+** Some possible solutions
+- Use named callbacks
+- Async.js, Q, etc ([[https://github.com/joyent/node/wiki/modules#libraries][Node's wiki]])
+- ECMAScript 6 (When?)
+* CoffeeScript
+** Ruby and Python inspired syntax
+** Compiles quickly to Javascript
+** Good correspondence between CS and resultant JS
+** Examples
+#+BEGIN_SRC coffee
+  math =
+    root:   Math.sqrt
+    square: square
+    cube:   (x) -> x * square x
+  
+  race = (winner, runners...) ->
+    print winner, runners
+  
+  alert "I knew it!" if elvis?
+#+END_SRC
+
+#+BEGIN_SRC javascript
+  math = {
+    root: Math.sqrt,
+    square: square,
+    cube: function(x) {
+      return x * square(x);
+    }
+  };
+  
+  race = function() {
+    var runners, winner;
+    winner = arguments[0], runners = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+    return print(winner, runners);
+  };
+  
+  if (typeof elvis !== "undefined" && elvis !== null) {
+    alert("I knew it!");
+  }
+#+END_SRC
+* Iced CoffeeScript
+http://maxtaco.github.io/coffee-script/
+** Maxwell Krohn ([[https://github.com/maxtaco][@maxtaco]])
+Of [[http://tamejs.org/][Tamejs]] and OkCupid and MIT CS-AIL
+** Fork of CoffeeScript
+** Drop-in replacement
+Well, nearly. Works except for new keyword conflicts.
+* So what's new?
+** =await= ... =defer=
+** =await= marks the start of a block that needs callbacks
+#+BEGIN_SRC coffee
+  await
+    some_long_running_function param_1, param_2, callback
+#+END_SRC
+** =defer= takes some slots, and returns a callback function
+#+BEGIN_SRC coffee
+  await
+    some_long_running_function param1, param2, defer(slot1, slot2)
+#+END_SRC
+** =await= waits for all =defer= s before proceeding, after which, the slots are filled
+#+BEGIN_SRC coffee
+  search = (keyword, cb) ->
+    host = "http://search.twitter.com/"
+    url = "#{host}/search.json?q=#{keyword}&callback=?"
+    await $.getJSON url, defer json
+    cb json.results
+#+END_SRC
+
+#+BEGIN_SRC coffee
+  search = (keyword, cb) ->
+    host = "http://search.twitter.com/"
+    url = "#{host}/search.json?q=#{keyword}&callback=?"
+    $.getJSON url, (json) ->
+      cb json.results
+#+END_SRC
+* The return callback pattern
+** =return cb()= is a common pattern
+#+BEGIN_SRC coffee
+  search = (keyword, cb) ->
+    host = "http://search.twitter.com/"
+    url = "#{host}/search.json?q=#{keyword}&callback=?"
+    await $.getJSON url, defer json
+    cb json.results
+#+END_SRC
+** With =autocb=
+#+BEGIN_SRC coffee
+  search = (keyword, autocb) ->
+    host = "http://search.twitter.com/"
+    url = "#{host}/search.json?q=#{keyword}&callback=?"
+    await $.getJSON url, defer json
+    return json.results # => cb json.results
+#+END_SRC
+** =autocb= can be used for multiple returns
+#+BEGIN_SRC coffee
+  search = (keyword, autocb) ->
+    if keyword?
+      host = "http://search.twitter.com/"
+      url = "#{host}/search.json?q=#{keyword}&callback=?"
+      await $.getJSON url, defer json
+      return json.results
+    else
+      return "" # => cb ""
+#+END_SRC
+* ICS flow control
+** =if= ... =else=
+#+BEGIN_SRC coffee
+  await
+    if diskCache.has n
+      diskCache.get n, defer value
+    else
+      networkClient.get n, defer value
+  use value
+#+END_SRC
+** =for=
+#+BEGIN_SRC coffee
+  serialSearch = (keywords, autocb) ->
+    out = []
+    for k,i in keywords
+      await search k, defer out[i]
+    return out
+#+END_SRC
+** =for= in parallel
+#+BEGIN_SRC coffee
+  parallelSearch = (keywords, autocb) ->
+    out = []
+    await 
+      for k,i in keywords
+        search k, defer out[i]
+    return out
+#+END_SRC
+** If we didn't have ICS?
+#+BEGIN_SRC coffee
+  parallelSearch = (keywords, cb) ->
+    results = []
+    n_out = 0
+    cb_generator = (i) ->
+      n_out++
+      (json) ->
+        results[i] = json
+        if n_out-- is 0
+          cb results
+    for k,i in keywords
+      search k, cb_generator i
+#+END_SRC
+
+#+BEGIN_SRC coffee
+  serialSearch = (keywords, cb) ->
+    result = []
+    i = 0
+    launch = () ->
+      if i < keywords.length
+         j = i++
+         search keywords[j], cb_generator j
+       else
+         cb results
+    cb_generator = (i) ->
+      (json) ->
+        results[i] = json
+        launch()
+    launch()
+#+END_SRC
+* We want it all!
+Mix both serial and parallel: Limit simultaneous parallel operations?
+** Naïve way
+#+BEGIN_SRC coffee
+  windowedSearch = (keywords, autocb, n=4) ->
+    out = []
+    for i in [0...keywords.length] by n
+      await 
+        for j in [i...i+n] when j < keywords.length
+          search keywords[j], defer out[j]
+  return out
+#+END_SRC
+** How about keeping /n/ requests in-flight at any time?
+** Using =Rendevous=
+#+BEGIN_SRC coffee
+  rendevousSearch = (keywords, autocb, n=4) ->
+    out = []
+    rv = new iced.Rendezvous
+    nsent = 0
+    nrecv = 0
+  
+    while nrecv < keywords.length
+      if nsent - nrecv < n and  nsent < n
+        search keywords[nsent], rv.defer out[nsent]
+        nsent++
+      else
+        await rv.wait defer()
+        nrecv++
+    return out
+#+END_SRC
+** Using =Pipeliner=
+#+BEGIN_SRC coffee
+  {Pipeliner} = require 'icedlib'
+
+  pipelinerSearch = (keywords, autocb, n=4) ->
+    out = []
+    pipeliner = new Pipeliner n
+  
+    for k, i in keywords
+      await pipeliner.waitInQueue defer()
+      search k, pipeliner.defer out[i]
+  
+    await pipeliner.flush defer()
+    return out
+#+END_SRC
+* Try many, but use the first hit
+E.g. post a single request to multiple servers and use the fastest
+result
+** Returning on first hit
+#+BEGIN_SRC coffee
+  firstSearch = (engines, keyword, autocb) ->
+    out[]
+    rv = new iced.Rendezvous
+
+    for e, i in engines
+      searchWith e, keyword, rv.defer out[i]
+    await rv.wait defer which
+    return out[which]
+#+END_SRC
+* Time out
+** What if a request takes too long?
+#+BEGIN_SRC coffee
+  parallelSearch = (keywords, autocb) ->
+    out = []
+    await 
+      for k,i in keywords
+        search k, defer out[i]
+    return out
+#+END_SRC
+** =timeout= to the rescue
+#+BEGIN_SRC coffee
+  {timeout} = require 'icedlib'
+  
+  parallelSearch = (keywords, autocb, maxTime=500) ->
+    out = []
+    await 
+      for k,i in keywords
+        search k, timeout defer(out[i]), maxTime
+    return out
+#+END_SRC
+* Asynchronous callbacks with Iced CoffeeScript is easy
+Who would've thunk?
+
+
+# Local Variables:
+# eval: (flyspell-mode t)
+# eval: (auto-fill-mode t)
+# End:
