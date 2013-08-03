@@ -1,31 +1,33 @@
 #+TITLE: How not to Build Pyramids with Ice
-#+STARTUP: showall
+#+AUTHOR: Lim Yu-Xi
+#+EMAIL: limyuxi@gmail.com
+#+DECK_POSTAMBLE: 
+#+OPTIONS: num:nil toc:nil
 
-* Ice cube structures
-** Block of ice sitting on a table
+* Block of ice sitting on a table
 How far out can you put it?
 
 [[./images/block-0.svg]]
-** Depends on the center-of-gravity
+* Depends on the center-of-gravity
 [[./images/block-1.svg]]
-** How about another identical ice block?
+* How about another identical ice block?
 [[./images/block-2x.svg]]
-** Need to move first block
+* Need to move first block
 [[./images/block-2.svg]]
-** And a third?
+* And a third?
 [[./images/block-3.svg]]
-** Harmonic series
+* Harmonic series
 \begin{equation}
 x_n = \frac{1}{2} \sum\limits_{i=1}^n \frac{1}{i}
 \end{equation}
-** After 5 blocks
+* After 5 blocks
 [[./images/block-5.svg]]
 * Asynchronous Javascript
 ** Single-threaded
 One thing at a time
 ** Use callbacks
 So you can do other work instead of just waiting
-** It's hell
+* It's hell
 #+BEGIN_SRC javascript
   MongoClient.connect('mongodb://127.0.0.1:27017/test', function(err, db) {
     if(err) throw err;
@@ -42,9 +44,9 @@ So you can do other work instead of just waiting
   });
 #+END_SRC
 [[https://github.com/mongodb/node-mongodb-native/blob/master/Readme.md][MongoDB Node driver README]]
-** Squint and look at it sideways
+* Squint and look at it sideways
 [[./images/pyramid.jpg]]
-** Some possible solutions
+* Some possible solutions
 - Use named callbacks
 - Async.js, Q, etc ([[https://github.com/joyent/node/wiki/modules#libraries][Node's wiki]])
 - ECMAScript 6 (When?)
@@ -52,7 +54,7 @@ So you can do other work instead of just waiting
 ** Ruby and Python inspired syntax
 ** Compiles quickly to Javascript
 ** Good correspondence between CS and resultant JS
-** Examples
+* CoffeeScript examples
 #+BEGIN_SRC coffee
   math =
     root:   Math.sqrt
@@ -91,19 +93,22 @@ Of [[http://tamejs.org/][Tamejs]] and OkCupid and MIT CS-AIL
 ** Fork of CoffeeScript
 ** Drop-in replacement
 Well, nearly. Works except for new keyword conflicts.
-* So what's new?
+* What's new?
 ** =await= ... =defer=
-** =await= marks the start of a block that needs callbacks
+* =await=...
+=await= marks the start of a block that needs callbacks
 #+BEGIN_SRC coffee
   await
     some_long_running_function param_1, param_2, callback
 #+END_SRC
-** =defer= takes some slots, and returns a callback function
+* ... =defer=
+=defer= takes some slots, and returns a callback function
 #+BEGIN_SRC coffee
   await
     some_long_running_function param1, param2, defer(slot1, slot2)
 #+END_SRC
-** =await= waits for all =defer= s before proceeding, after which, the slots are filled
+* =await= ... =defer=
+=await= waits for all =defer= s before proceeding, after which, the slots are filled
 #+BEGIN_SRC coffee
   search = (keyword, cb) ->
     host = "http://search.twitter.com/"
@@ -119,8 +124,10 @@ Well, nearly. Works except for new keyword conflicts.
     $.getJSON url, (json) ->
       cb json.results
 #+END_SRC
-* The return callback pattern
-** =return cb()= is a common pattern
+* What's new?
+** =await= ... =defer=
+** =autocb=
+* =return cb()= is a common pattern
 #+BEGIN_SRC coffee
   search = (keyword, cb) ->
     host = "http://search.twitter.com/"
@@ -128,7 +135,7 @@ Well, nearly. Works except for new keyword conflicts.
     await $.getJSON url, defer json
     cb json.results
 #+END_SRC
-** With =autocb=
+* With =autocb=
 #+BEGIN_SRC coffee
   search = (keyword, autocb) ->
     host = "http://search.twitter.com/"
@@ -136,7 +143,7 @@ Well, nearly. Works except for new keyword conflicts.
     await $.getJSON url, defer json
     return json.results # => cb json.results
 #+END_SRC
-** =autocb= can be used for multiple returns
+* =autocb= for multiple returns
 #+BEGIN_SRC coffee
   search = (keyword, autocb) ->
     if keyword?
@@ -147,8 +154,7 @@ Well, nearly. Works except for new keyword conflicts.
     else
       return "" # => cb ""
 #+END_SRC
-* ICS flow control
-** =if= ... =else=
+* =if= ... =else=
 #+BEGIN_SRC coffee
   await
     if diskCache.has n
@@ -157,7 +163,7 @@ Well, nearly. Works except for new keyword conflicts.
       networkClient.get n, defer value
   use value
 #+END_SRC
-** =for=
+* =for=
 #+BEGIN_SRC coffee
   serialSearch = (keywords, autocb) ->
     out = []
@@ -165,7 +171,7 @@ Well, nearly. Works except for new keyword conflicts.
       await search k, defer out[i]
     return out
 #+END_SRC
-** =for= in parallel
+* =for= in parallel
 #+BEGIN_SRC coffee
   parallelSearch = (keywords, autocb) ->
     out = []
@@ -174,7 +180,7 @@ Well, nearly. Works except for new keyword conflicts.
         search k, defer out[i]
     return out
 #+END_SRC
-** If we didn't have ICS?
+* If we didn't have ICS?
 #+BEGIN_SRC coffee
   parallelSearch = (keywords, cb) ->
     results = []
@@ -207,7 +213,8 @@ Well, nearly. Works except for new keyword conflicts.
 #+END_SRC
 * We want it all!
 Mix both serial and parallel: Limit simultaneous parallel operations?
-** Naïve way
+* Naïve way
+Do in batches of /n/
 #+BEGIN_SRC coffee
   windowedSearch = (keywords, autocb, n=4) ->
     out = []
@@ -217,8 +224,9 @@ Mix both serial and parallel: Limit simultaneous parallel operations?
           search keywords[j], defer out[j]
   return out
 #+END_SRC
-** How about keeping /n/ requests in-flight at any time?
-** Using =Rendevous=
+
+How about keeping /n/ requests in-flight at any time?
+* Using =Rendevous=
 #+BEGIN_SRC coffee
   rendevousSearch = (keywords, autocb, n=4) ->
     out = []
@@ -235,7 +243,7 @@ Mix both serial and parallel: Limit simultaneous parallel operations?
         nrecv++
     return out
 #+END_SRC
-** Using =Pipeliner=
+* Using =Pipeliner=
 #+BEGIN_SRC coffee
   {Pipeliner} = require 'icedlib'
 
@@ -253,7 +261,7 @@ Mix both serial and parallel: Limit simultaneous parallel operations?
 * Try many, but use the first hit
 E.g. post a single request to multiple servers and use the fastest
 result
-** Returning on first hit
+
 #+BEGIN_SRC coffee
   firstSearch = (engines, keyword, autocb) ->
     out[]
@@ -265,7 +273,7 @@ result
     return out[which]
 #+END_SRC
 * Time out
-** What if a request takes too long?
+What if a request takes too long?
 #+BEGIN_SRC coffee
   parallelSearch = (keywords, autocb) ->
     out = []
@@ -274,7 +282,7 @@ result
         search k, defer out[i]
     return out
 #+END_SRC
-** =timeout= to the rescue
+* =timeout= to the rescue
 #+BEGIN_SRC coffee
   {timeout} = require 'icedlib'
   
@@ -285,7 +293,11 @@ result
         search k, timeout defer(out[i]), maxTime
     return out
 #+END_SRC
-* Asynchronous callbacks with Iced CoffeeScript is easy
+* It is easy
+Asynchronous callbacks with Iced CoffeeScript are easy
+
+[[./images/icedcoffee.jpg]]
+
 Who would've thunk?
 
 
