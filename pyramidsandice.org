@@ -294,7 +294,7 @@ What if a request takes too long?
         search k, timeout defer(out[i]), maxTime
     return out
 #+END_SRC
-* It is easy
+* It's easy
 Asynchronous callbacks with Iced CoffeeScript are easy
 
 [[./images/icedcoffee.jpg]]
