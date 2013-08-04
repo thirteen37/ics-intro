@@ -300,9 +300,16 @@ Asynchronous callbacks with Iced CoffeeScript are easy
 [[./images/icedcoffee.jpg]]
 
 Who would've thunk?
+* Download & contact
+https://github.com/thirteen37/ics-intro
+
+- limyuxi@gmail.com
+- @snarfnbarf
 
 
 # Local Variables:
 # eval: (flyspell-mode t)
 # eval: (auto-fill-mode t)
+# org-deck-title-slide-template: "<h1>%t</h1>\
+#   <h2>%d</h2>"
 # End:
