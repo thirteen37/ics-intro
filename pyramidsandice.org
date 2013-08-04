@@ -234,7 +234,7 @@ Do in batches of /n/
       await 
         for j in [i...i+n] when j < keywords.length
           search keywords[j], defer out[j]
-  return out
+    return out
 #+END_SRC
 
 How about keeping /n/ requests in-flight at any time?
@@ -276,7 +276,7 @@ result
 
 #+BEGIN_SRC coffee
   firstSearch = (engines, keyword, autocb) ->
-    out[]
+    out = []
     rv = new iced.Rendezvous
 
     for e, i in engines
