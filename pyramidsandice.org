@@ -3,6 +3,7 @@
 #+EMAIL: limyuxi@gmail.com
 #+DECK_POSTAMBLE: 
 #+OPTIONS: num:nil toc:nil
+#+HTML_MATHJAX: mathml:t path:"MathJax/MathJax.js"
 
 * Block of ice sitting on a table
 How far out can you put it?
