@@ -112,18 +112,18 @@ Well, nearly. Works except for new keyword conflicts.
 =await= waits for all =defer= s before proceeding, after which, the slots are filled
 #+BEGIN_SRC coffee
   search = (keyword, cb) ->
-    host = "http://search.twitter.com/"
-    url = "#{host}/search.json?q=#{keyword}&callback=?"
-    await $.getJSON url, defer json
-    cb json.results
+    api = "https://www.googleapis.com/customsearch/v1"
+    url = "#{api}?q=#{keyword}&key=#{key}&cx=#{cx}&alt=json"
+    await request url: url, json: true, defer e, r, json
+    cb json.items
 #+END_SRC
 
 #+BEGIN_SRC coffee
   search = (keyword, cb) ->
-    host = "http://search.twitter.com/"
-    url = "#{host}/search.json?q=#{keyword}&callback=?"
-    $.getJSON url, (json) ->
-      cb json.results
+    api = "https://www.googleapis.com/customsearch/v1"
+    url = "#{api}?q=#{keyword}&key=#{key}&cx=#{cx}&alt=json"
+    request url: url, json: true, (e, r, json) ->
+      cb json.items
 #+END_SRC
 * What's new?
 ** =await= ... =defer=
@@ -131,27 +131,27 @@ Well, nearly. Works except for new keyword conflicts.
 * =return cb()= is a common pattern
 #+BEGIN_SRC coffee
   search = (keyword, cb) ->
-    host = "http://search.twitter.com/"
-    url = "#{host}/search.json?q=#{keyword}&callback=?"
-    await $.getJSON url, defer json
-    cb json.results
+    api = "https://www.googleapis.com/customsearch/v1"
+    url = "#{api}?q=#{keyword}&key=#{key}&cx=#{cx}&alt=json"
+    await request url: url, json: true, defer e, r, json
+    cb json.items
 #+END_SRC
 * With =autocb=
 #+BEGIN_SRC coffee
   search = (keyword, autocb) ->
-    host = "http://search.twitter.com/"
-    url = "#{host}/search.json?q=#{keyword}&callback=?"
-    await $.getJSON url, defer json
-    return json.results # => cb json.results
+    api = "https://www.googleapis.com/customsearch/v1"
+    url = "#{api}?q=#{keyword}&key=#{key}&cx=#{cx}&alt=json"
+    await request url: url, json: true, defer e, r, json
+    return json.items
 #+END_SRC
 * =autocb= for multiple returns
 #+BEGIN_SRC coffee
   search = (keyword, autocb) ->
     if keyword?
-      host = "http://search.twitter.com/"
-      url = "#{host}/search.json?q=#{keyword}&callback=?"
-      await $.getJSON url, defer json
-      return json.results
+      api = "https://www.googleapis.com/customsearch/v1"
+      url = "#{api}?q=#{keyword}&key=#{key}&cx=#{cx}&alt=json"
+      await request url: url, json: true, defer e, r, json
+      return json.items
     else
       return "" # => cb ""
 #+END_SRC
