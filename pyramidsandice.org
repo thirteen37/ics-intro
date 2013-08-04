@@ -155,6 +155,17 @@ Well, nearly. Works except for new keyword conflicts.
     else
       return "" # => cb ""
 #+END_SRC
+* Flattening pyramids
+#+BEGIN_SRC coffee
+  await MongoClient.connect 'mongodb://127.0.0.1:27017/test', defer err, db
+  if err throw err
+  await db.dropDatabase defer err, done
+  await db.createCollection 'test_custom_key', defer err, collection
+  await collection.insert 'a':1, defer err, docs
+  await collection.find('_id':new ObjectID("aaaaaaaaaaaa")).toArray defer err, items
+  console.dir items
+  db.close()
+#+END_SRC
 * =if= ... =else=
 #+BEGIN_SRC coffee
   await
