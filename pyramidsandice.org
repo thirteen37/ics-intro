@@ -89,7 +89,7 @@ So you can do other work instead of just waiting
 * Iced CoffeeScript
 http://maxtaco.github.io/coffee-script/
 ** Maxwell Krohn ([[https://github.com/maxtaco][@maxtaco]])
-Of [[http://tamejs.org/][Tamejs]] and OkCupid and MIT CS-AIL
+Of [[http://tamejs.org/][Tamejs]] and OkCupid and MIT CSAIL
 ** Fork of CoffeeScript
 ** Drop-in replacement
 Well, nearly. Works except for new keyword conflicts.
@@ -161,7 +161,7 @@ Well, nearly. Works except for new keyword conflicts.
       diskCache.get n, defer value
     else
       networkClient.get n, defer value
-  use value
+  doSomethingWith value
 #+END_SRC
 * =for=
 #+BEGIN_SRC coffee
